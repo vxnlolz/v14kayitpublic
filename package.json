@@ -1,23 +1,35 @@
 {
-  "name": "Godzilla",
-  "version": "4.0.0",
-  "description": "V14 Public Kayıt Bot Altyapısı.",
+  "name": "yashinu-register-bot",
+  "version": "1.0.0",
+  "description": "Yashinu Discord Register Bot",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "test": "node index.js"
   },
-  "keywords": [],
-  "author": "Ly3ssia",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yashinu/discord-register-bot.git"
+  },
+  "author": "Yashinu",
   "license": "ISC",
+  "homepage": "https://github.com/yashinu/discord-register-bot#readme",
+  "keywords": [
+    "register",
+    "bot",
+    "discordbot",
+    "discord",
+    "yashinu",
+    "teyit",
+    "teyitbotu",
+    "altyapı",
+    "altyapi"
+  ],
   "dependencies": {
-    "@discordjs/builders": "^1.0.0",
-    "croxydb": "^0.0.7",
-    "discord.js": "^14.0.1",
-    "fs": "^0.0.1-security",
-    "moment": "^2.29.4",
-    "moment-duration-format": "^2.3.2"
+    "discord.js": "^12.5.1",
+    "moment": "^2.29.1",
+    "moment-duration-format": "^2.3.2",
+    "moment-timezone": "^0.5.32",
+    "mongoose": "^5.11.13"
   },
-  "engines": {
-    "node": "16.x"
-  }
+  "devDependencies": {}
 }

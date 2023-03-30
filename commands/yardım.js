@@ -1,22 +1,14 @@
-const {EmbedBuilder, PermissionsBitField} = require("discord.js");
-const db = require("croxydb")
-const config = require("../config.js")
-let prefix = config.prefix
-exports.run = async (client, message, args) => {
+const { MessageEmbed } = require("discord.js");
+const teyitci = require("../models/teyitci.js");
 
- const embed = new EmbedBuilder()
- .setTitle("Godzilla - Yardım!")
- .setDescription(`${prefix}erkek-rol\n${prefix}kız-rol\n${prefix}kayıtlı-rol\n${prefix}kayıtsız-rol\n${prefix}hg-bb\n${prefix}yardım`)
-.setColor("#007fff")
- message.channel.send({embeds : [embed]})
-
-};
-exports.conf = {
-  aliases: []
+module.exports.run = async (client, message, args) => {
+  let embed = new MessageEmbed().setAuthor(message.member.displayName, message.author.displayAvatarURL({ dynamic: true })).setColor(client.config.embedColor);
+  message.channel.send(embed.setDescription(`${client.commands.map(c => `\`•\` ${c.config.usage} \`=>\` ${c.config.description}`).join("\n")}`).setFooter(`<> zorunlu, [] isteğe bağlı.`));
 };
 
-exports.help = {
-  name: "yardım"
+module.exports.config = {
+  name: "yardım",
+  description: "Komut listesi.",
+  usage: "yardım",
+  aliases: ["help"],
 };
-
-

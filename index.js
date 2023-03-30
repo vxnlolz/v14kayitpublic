@@ -1,51 +1,59 @@
-const { Client, GatewayIntentBits, Partials } = require("discord.js");
-const config = require("./config.js");
-const db = require("croxydb")
-const client = new Client({
-  partials: [
-    Partials.Message, // for message
-    Partials.Channel, // for text channel
-    Partials.GuildMember, // for guild member
-    Partials.Reaction, // for message reaction
-    Partials.GuildScheduledEvent, // for guild events
-    Partials.User, // for discord user
-    Partials.ThreadMember, // for thread member
-  ],
-  intents: [
-    GatewayIntentBits.Guilds, // for guild related things
-    GatewayIntentBits.GuildMembers, // for guild members related things
-    GatewayIntentBits.GuildBans, // for manage guild bans
-    GatewayIntentBits.GuildEmojisAndStickers, // for manage emojis and stickers
-    GatewayIntentBits.GuildIntegrations, // for discord Integrations
-    GatewayIntentBits.GuildWebhooks, // for discord webhooks
-    GatewayIntentBits.GuildInvites, // for guild invite managing
-    GatewayIntentBits.GuildVoiceStates, // for voice related things
-    GatewayIntentBits.GuildPresences, // for user presence things
-    GatewayIntentBits.GuildMessages, // for guild messages things
-    GatewayIntentBits.GuildMessageReactions, // for message reactions things
-    GatewayIntentBits.GuildMessageTyping, // for message typing things
-    GatewayIntentBits.DirectMessages, // for dm messages
-    GatewayIntentBits.DirectMessageReactions, // for dm message reaction
-    GatewayIntentBits.DirectMessageTyping, // for dm message typinh
-    GatewayIntentBits.MessageContent, // enable if you need message content things
-  ],
+const { Client, Collection, MessageEmbed } = require("discord.js");
+const client = new Client({ fetchAllMembers: true });
+const fs = require("fs");
+const config = client.config = require("./config.json");
+const moment = require("moment");
+require("moment-duration-format");
+require("moment-timezone");
+moment.locale("tr");
+const mongoose = require("mongoose");
+mongoose.connect(config.mongooseConnectURL, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false }).then(x => console.log("MongoDB bağlantısı kuruldu!")).catch(err => console.error(err));
+mongoose.connection.on('error', (err) => {
+  console.log(`[Mongoose Error]: ${err}`);
 });
 
-module.exports = client;
+Array.prototype.clear = function() {
+  let newArray = [];
+  for (let i of this) {
+   if (!newArray.includes(i) && i !== "" && i !== " ") newArray.push(i);
+  };
+  return newArray;
+};
 
-require("./events/message.js")
-require("./events/ready.js")
+Date.prototype.toTurkishFormat = function() {
+  return moment.tz(this, "Europe/Istanbul").format('LLL');
+};
 
-client.on("guildMemberAdd", member => {
-  const kanal = db.get(`hgbb_${member.guild.id}`)
-const moment = require("moment");
-const limit = new Map();
-moment.locale("tr");
-  if(!kanal) return;
-  let kayıtsız = db.fetch(`kayıtsız_${member.guild.id}`)
-        member.guild.members.cache.get(member.id).roles.add(kayıtsız)
-  member.guild.channels.cache.get(kanal).send({content: `:inbox_tray: | Kullanıcı: ${member}\n\nSunucudaki Üye Sayısı: **${member.guild.memberCount}**\n\nHesap Oluşturulma Tarihi: \`${moment(member.createdAt).format('D MMMM YYYY')}\``})
-})
+const events = fs.readdirSync("./events");
+for (let event of events) {
+  if (!event.endsWith(".js")) continue;
+  let prop = require(`./events/${event}`);
+  if (!prop.config) continue;
+  if (prop.config.name !== "ready") {
+    client.on(prop.config.name, prop);
+  } else {
+    client.on(prop.config.name, () => prop(client));
+  };
+  console.log(`[EVENT]: ${event} yüklendi!`);
+};
 
+client.commands = new Collection();
+client.aliases = new Collection();
+const commands = fs.readdirSync("./commands");
+for (let command of commands) {
+  if (!command.endsWith(".js")) continue;
+  let prop = require(`./commands/${command}`);
+  client.commands.set(prop.config.name, prop);
+  if (prop.config.aliases) {
+    prop.config.aliases.clear().forEach(aliase => {
+      client.aliases.set(aliase, prop.config.name);
+    });
+  };
+  console.log(`[KOMUT]: ${prop.config.name} yüklendi!`);
+};
 
-client.login(config.token)
+var regToken = /[\w\d]{24}\.[\w\d]{6}\.[\w\d-_]{27}/g;
+client.on('warn', e => { console.log(chalk.bgYellow(e.replace(regToken, 'that was redacted'))); });
+client.on('error', e => { console.log(chalk.bgRed(e.replace(regToken, 'that was redacted'))); });
+
+client.login(config.botToken).then(x => console.log(`${client.user.tag} olarak bota giriş yapıldı!`)).catch(err => console.error(`Bota giriş yapılamadı!\n[HATA]: ${err}`));
